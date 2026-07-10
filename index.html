@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Argentina Energía — Red de carga EV</title>
+<meta name="description" content="Mapa en vivo de todos los puntos de carga para vehículos eléctricos en Argentina.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="map"></div>
+
+<header id="topbar">
+  <div class="brand">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="currentColor"/>
+    </svg>
+    <span>argentina energía</span>
+  </div>
+
+  <div class="stats" id="stats-line">
+    <div class="stat"><b id="stat-count">—</b><i>puntos</i></div>
+    <div class="stat"><b id="stat-kw">—</b><i>kW</i></div>
+    <div class="stat"><b id="stat-prov">—</b><i>provincias</i></div>
+  </div>
+
+  <div class="actions">
+    <input type="text" id="f-search" placeholder="Buscar dirección o localidad">
+    <button id="panel-toggle" aria-label="Filtros">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Filtros</span>
+    </button>
+  </div>
+</header>
+
+<div id="scrim"></div>
+
+<aside id="panel">
+  <div class="panel-head">
+    <h2>Filtros</h2>
+    <button id="panel-close" aria-label="Cerrar">✕</button>
+  </div>
+
+  <div class="panel-section">
+    <h3>Potencia</h3>
+    <label><input type="checkbox" class="f-power" value="slow" checked><span>Lenta</span><i>&lt;22kW</i></label>
+    <label><input type="checkbox" class="f-power" value="fast" checked><span>Rápida</span><i>22–99kW</i></label>
+    <label><input type="checkbox" class="f-power" value="ultra" checked><span>Ultra rápida</span><i>≥100kW</i></label>
+  </div>
+  <div class="panel-section">
+    <h3>Operador</h3>
+    <select id="f-operator">
+      <option value="">Todos</option>
+    </select>
+  </div>
+  <div class="panel-section">
+    <h3>Provincia</h3>
+    <select id="f-province">
+      <option value="">Todas</option>
+    </select>
+  </div>
+  <button id="f-reset">Limpiar filtros</button>
+</aside>
+
+<div id="loading">
+  <span class="pulse-dot"></span> Cargando red de carga
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
