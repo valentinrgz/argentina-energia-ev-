@@ -33,6 +33,13 @@ const chargeIcon = L.divIcon({
   iconAnchor: [6, 6]
 });
 
+const scameIcon = L.divIcon({
+  className: 'charge-marker',
+  html: '<div style="width:9px;height:9px;border-radius:50%;background:#FF8452;border:1.5px solid #0B1614;"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6]
+});
+
 const clusters = L.markerClusterGroup({
   maxClusterRadius: 45,
   iconCreateFunction: cluster => L.divIcon({
@@ -45,6 +52,86 @@ const clusters = L.markerClusterGroup({
   })
 });
 map.addLayer(clusters);
+
+// Red de carga Scame — no está en OpenChargeMap, se carga como capa fija
+// (fuente: mapa oficial de Scame E-Mobility Argentina, emobility.ar)
+const SCAME_POINTS = [
+  { name: 'Andreani Norlog', lat: -34.429595, lng: -58.681922, address: 'Av. Presidente Perón 4749, Benavidez,  Buenos Aires' },
+  { name: 'BP Salta', lat: -24.820692, lng: -65.414879, address: 'Av. Monseñor Tavella 2830, Salta, Salta' },
+  { name: 'BP Yerba Buena', lat: -26.811798, lng: -65.303159, address: 'Av. Aconquija 2214, T4107 Yerba Buena, Tucumán' },
+  { name: 'Camino de los Remeros', lat: -34.427903, lng: -58.611508, address: '' },
+  { name: 'Centro Comercial Gomez Pardo', lat: -26.80027, lng: -65.295064, address: 'Av. Juan Domingo Perón 1850, Yerba Buena, Tucumán' },
+  { name: 'City Center', lat: -33.010004, lng: -60.662604, address: 'Av. Battle y Ordóñez y Bv. Oroño, Rosario, Santa Fe' },
+  { name: 'Comodoro Conocimiento', lat: -45.82964, lng: -67.466778, address: 'G. E. Hudson 54, Comodoro Rivadavia, Chubut' },
+  { name: 'Contelec', lat: -38.721856, lng: -62.294243, address: 'Don Bosco 1055, Bahía Blanca, Buenos Aires' },
+  { name: 'Cooperativa Eléctrica Gualeguaychú', lat: -33.017246, lng: -58.524113, address: 'Constitución y Goldaracena, Gualeguaychu, Entre Rios' },
+  { name: 'Cruzzolin', lat: -34.635029, lng: -58.758476, address: 'Acc. Oeste Km 34, Moreno, Buenos Aires' },
+  { name: 'Dygelec', lat: -32.410184, lng: -63.261697, address: 'Blvd. Colón 18, Villa María, Córdoba' },
+  { name: 'Electricidad Alsina', lat: -34.664746, lng: -58.366344, address: 'Av. Manuel Belgrano 746, Avellaneda, Buenos Aires' },
+  { name: 'Electricidad Maza', lat: -32.88855, lng: -68.834663, address: 'Lavalle 266, Mendoza, Mendoza' },
+  { name: 'Electricidad Solari', lat: -34.896714, lng: -57.940922, address: 'Av. 122 Nº 580, Ensenada, Buenos Aires' },
+  { name: 'Electro 2001', lat: -34.634641, lng: -58.54271, address: 'Av. Gaona 3995, Ciudadela, Buenos Aires' },
+  { name: 'Electro Dos', lat: -34.585634, lng: -58.536114, address: 'H. Yrigoyen 4286, San Martín, Buenos Aires' },
+  { name: 'Electro Lujan', lat: -34.562292, lng: -59.11258, address: 'Almte. Brown 574, Luján, Buenos Aires' },
+  { name: 'Electropuerto', lat: -38.050608, lng: -57.54399, address: 'Av. Prefectura Naval Argentina 150, Mar del Plata, Buenos Aires' },
+  { name: 'EPEC', lat: -31.407375, lng: -64.185471, address: 'Blvd. Mitre 343, X5022 Córdoba' },
+  { name: 'EPEC Marcos Juarez', lat: -32.697719, lng: -62.100125, address: 'Jujuy 198, Marcos Juárez, Córdoba' },
+  { name: 'Equipel', lat: -38.953539, lng: -68.02692, address: 'Félix San Martín 2322, Neuquén' },
+  { name: 'FG Industrial', lat: -35.656299, lng: -63.747378, address: 'Calle 17 1526 Gral. Pico, La Pampa' },
+  { name: 'Greco', lat: -34.547811, lng: -58.554294, address: 'Lavalle 2600, Villa Ballester, Buenos Aires' },
+  { name: 'Harmonie Chateau', lat: -31.389007, lng: -64.259642, address: 'Calandria 151, Córdoba' },
+  { name: 'Madero Harbour', lat: -34.619237, lng: -58.360883, address: 'Lola Mora 450' },
+  { name: 'Matelec', lat: -37.323698, lng: -59.134605, address: 'Alem 725, Tandil, Buenos Aires' },
+  { name: 'Melecsur', lat: -42.768284, lng: -65.037964, address: 'Belgrano 379, Puerto Madryn, Chubut' },
+  { name: 'Neuquén', lat: -38.9766, lng: -68.0474, address: 'Isla 132, paseo de la costa.' },
+  { name: 'Nissan Neostar', lat: -32.937203, lng: -60.655117, address: 'Catamarca 2440, S2000 Rosario, Santa Fe' },
+  { name: 'Nuevo Sur', lat: -45.892923, lng: -67.537107, address: 'Av. Hipólito Yrigoyen 4075, Comodoro Rivadavia' },
+  { name: 'Park 10', lat: -34.485872, lng: -58.593863, address: 'Dr. René Favaloro 3331, Victoria, San Fernando, Buenos Aires' },
+  { name: 'Parque Mitre', lat: -32.921378, lng: -68.84042, address: 'Abierto 24hs' },
+  { name: 'Pastorutti', lat: -36.631156, lng: -64.301896, address: 'Av. Circunvalación Sgo. Marzo Sur 455, Santa Rosa, La Pampa' },
+  { name: 'Pelba Pilar', lat: -34.45135, lng: -58.923395, address: 'Panamericana Km 55, Del Viso, Provincia de Buenos Aires' },
+  { name: 'Pem', lat: -34.848111, lng: -58.398142, address: 'Av. Hipólito Yrigoyen 16720, Burzaco, Provincia de Buenos Aires' },
+  { name: 'Ruta 7, Peaje Desaguadero', lat: -33.411913, lng: -67.123216, address: 'AU de las Serranías Puntanas, San Luis' },
+  { name: 'Ruta 7, Peaje La Cumbre', lat: -33.359117, lng: -66.066639, address: 'AU de las Serranías Puntanas, San Luis' },
+  { name: 'Ruta 7, Peaje Justo Daract', lat: -33.852114, lng: -65.150805, address: 'AU de las Serranías Puntanas, San Luis' },
+  { name: 'Shopping Plaza San Lorenzo', lat: -24.743585, lng: -65.484718, address: 'Avenida San Martín 866, San Lorenzo, Salta' },
+  { name: 'Shopping Tierra Chica', lat: -32.922573, lng: -60.802688, address: 'Cordoba 972, Funes, Santa Fe' },
+  { name: 'Sierra Electricidad', lat: -34.624642, lng: -68.339005, address: 'Av. Domingo Faustino Sarmiento 450, San Rafael, Mendoza' },
+  { name: 'Tamex 2', lat: -35.44018, lng: -60.900682, address: 'Compaire 2163, 9 de Julio, Buenos Aires' },
+  { name: 'Terrazas del Portezuelo', lat: -33.301617, lng: -66.293639, address: 'RN7 Km 783, San Luis' },
+  { name: 'Tifón Water Planet', lat: -32.837668, lng: -60.698418, address: 'Julio Argentino Roca 650, Granadero Baigorria, Santa Fe' },
+  { name: 'Vanluz', lat: -34.400044, lng: -58.736768, address: 'Del Trabajo 1294, Garin, Buenos Aires' },
+  { name: 'YPF Dolores', lat: -36.257473, lng: -57.709485, address: 'Ruta Nacional Nº 2, KM 202, Dolores, Bs As' },
+  { name: 'YPF Lucam Cordoba', lat: -31.376421, lng: -64.126494, address: '' },
+  { name: 'YPF Vensim Cordoba', lat: -31.376876, lng: -64.128582, address: '' },
+  { name: 'YPF Punto Panorámico Cordoba', lat: -31.385874, lng: -64.279314, address: 'Av. Ejército Argentino km 6.5, Córdoba' },
+  { name: 'YPF Rio Segundo Ascendente', lat: -31.652528, lng: -63.854472, address: '' },
+  { name: 'YPF Rio Segundo Descendente', lat: -31.652694, lng: -63.857028, address: '' },
+  { name: 'Grupo Cala S.A', lat: -34.632145, lng: -58.661291, address: 'Horarios de 8:30 a 17:00 L a V y Sábados de 9:00 a 13:00' },
+  { name: 'JOMA electricidad', lat: -34.854976, lng: -58.50364, address: '' },
+  { name: 'Punto 54', lat: -38.037677, lng: -57.587768, address: '' },
+  { name: 'Richetta Schneider', lat: -31.434234, lng: -64.13242, address: '' },
+  { name: 'Transelec SRL Mat. Electricos', lat: -32.987605, lng: -60.740391, address: '' },
+  { name: 'Serra Electricidad', lat: -32.900212, lng: -60.910248, address: '' },
+  { name: 'BP Soluciones Eléctricas Confiables', lat: -26.811788, lng: -65.303154, address: '' },
+  { name: 'Ciardi Hnos', lat: -37.975707, lng: -57.592112, address: '' },
+  { name: 'Parque Industrial Roldán', lat: -32.855692, lng: -60.884438, address: 'Roldán, Santa Fe' },
+  { name: 'Paseo La Plaza', lat: -34.60439, lng: -58.39019, address: '' },
+  { name: 'Serra electricidad Srl', lat: -32.9186, lng: -60.813611, address: 'Lunes a viernes 8 30 a 17 30. Sábados 8 30 a 12 30' },
+  { name: 'Villa Maria Epec', lat: -32.410083, lng: -63.244028, address: 'Cargador de continua hasta 25 kW' },
+  { name: 'Centro logístico ALKO', lat: -34.538643, lng: -58.520743, address: '' },
+  { name: 'Oficinas Centrales AKLO', lat: -34.542468, lng: -58.529111, address: '' },
+  { name: 'Equipel', lat: -38.953526, lng: -68.026833, address: '' },
+  { name: 'Nuevo Sur SA', lat: -38.910266, lng: -68.095282, address: '' },
+  { name: 'Serra Electricidad', lat: -32.959344, lng: -60.642121, address: '' },
+  { name: 'Transelec SRL - Sucursal Pergamino', lat: -33.888714, lng: -60.572753, address: '' },
+  { name: 'Ciardi Hnos. | Suc. Balcarce', lat: -37.850185, lng: -58.250486, address: '' },
+  { name: 'Ciardi Hnos. | Suc. La Costa', lat: -37.141856, lng: -56.914397, address: '' },
+  { name: 'Magnani Soluciones Eléctricas Sustentables', lat: -32.920641, lng: -60.717221, address: '' },
+  { name: 'Fegime Latam SA', lat: -34.497121, lng: -58.54514, address: '' },
+  { name: 'Trielec S.A.', lat: -31.563529, lng: -68.514742, address: '' },
+  { name: 'Pelba - Sucursal Escobar', lat: -34.329189, lng: -58.763693, address: '' }
+];
 
 let allPOIs = [];       // datos crudos de la API
 let markerIndex = [];   // { poi, marker, powerBand, operator, province }
@@ -195,8 +282,49 @@ async function cargarCargadores() {
 
   populateSelect('f-operator', operators);
   populateSelect('f-province', provinces);
+  cargarScame(operators, provinces);
   renderMarkers();
   document.getElementById('loading').classList.add('hidden');
+}
+
+function cargarScame(operators, provinces) {
+  SCAME_POINTS.forEach(p => {
+    const { name: province, distance } = nearestProvince(p.lat, p.lng);
+    if (distance > 250) return;
+
+    const marker = L.marker([p.lat, p.lng], { icon: scameIcon });
+    marker.bindPopup(`
+      <div class="poi-title">${p.name}</div>
+      <div class="poi-row"><span>Dirección:</span> ${p.address || 'N/D'}</div>
+      <div class="poi-row"><span>Operador:</span> Scame</div>
+      <div class="poi-row"><span>Conectores:</span><br>Tipo 2 · red pública gratuita</div>
+    `);
+
+    operators.add('Scame');
+    provinces.add(province);
+    populateSelectOption('f-operator', 'Scame');
+    populateSelectOption('f-province', province);
+
+    markerIndex.push({
+      marker, maxKW: 0,
+      powerBand: 'fast', // Scame no publica kW por punto; en general son AC 7-22kW
+      operator: 'Scame', province,
+      searchBlob: `${p.name} ${p.address} ${province}`.toLowerCase()
+    });
+  });
+}
+
+function populateSelectOption(id, value) {
+  const select = document.getElementById(id);
+  if ([...select.options].some(o => o.value === value)) return;
+  const opts = [...select.options].slice(1); // sin "Todos"/"Todas"
+  const opt = document.createElement('option');
+  opt.value = value; opt.textContent = value;
+  opts.push(opt);
+  opts.sort((a, b) => a.value.localeCompare(b.value, 'es'));
+  select.innerHTML = '';
+  select.appendChild(new Option(id === 'f-operator' ? 'Todos' : 'Todas', ''));
+  opts.forEach(o => select.appendChild(o));
 }
 
 // listeners
