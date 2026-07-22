@@ -133,6 +133,51 @@ const SCAME_POINTS = [
   { name: 'Pelba - Sucursal Escobar', lat: -34.329189, lng: -58.763693, address: '' }
 ];
 
+// Alias de texto para detectar la provincia real cuando la dirección la
+// menciona explícitamente — más confiable que el centroide más cercano,
+// que puede fallar cerca de límites provinciales.
+const PROVINCE_ALIASES = [
+  ['CABA', ['CABA', 'Capital Federal', 'Ciudad Autónoma de Buenos Aires', 'Ciudad de Buenos Aires']],
+  ['Tierra del Fuego', ['Tierra del Fuego']],
+  ['Santiago del Estero', ['Santiago del Estero']],
+  ['Entre Ríos', ['Entre Ríos', 'Entre Rios']],
+  ['Río Negro', ['Río Negro', 'Rio Negro']],
+  ['La Pampa', ['La Pampa']],
+  ['La Rioja', ['La Rioja']],
+  ['San Juan', ['San Juan']],
+  ['San Luis', ['San Luis']],
+  ['Santa Cruz', ['Santa Cruz']],
+  ['Santa Fe', ['Santa Fe']],
+  ['Buenos Aires', ['Buenos Aires', 'Bs. As.', 'Bs As']],
+  ['Catamarca', ['Catamarca']],
+  ['Chaco', ['Chaco']],
+  ['Chubut', ['Chubut']],
+  ['Córdoba', ['Córdoba', 'Cordoba']],
+  ['Corrientes', ['Corrientes']],
+  ['Formosa', ['Formosa']],
+  ['Jujuy', ['Jujuy']],
+  ['Mendoza', ['Mendoza']],
+  ['Misiones', ['Misiones']],
+  ['Neuquén', ['Neuquén', 'Neuquen']],
+  ['Salta', ['Salta']],
+  ['Tucumán', ['Tucumán', 'Tucuman']]
+];
+
+function provinceFromText(text) {
+  if (!text) return null;
+  for (const [canonical, aliases] of PROVINCE_ALIASES) {
+    if (aliases.some(a => text.toLowerCase().includes(a.toLowerCase()))) return canonical;
+  }
+  return null;
+}
+
+// Estima potencia a partir del texto de dirección (ej. "hasta 25 kW");
+// si no hay dato, se asume el estándar Scame Tipo 2 AC de 22kW.
+function powerFromText(text) {
+  const m = text?.match(/(\d+)\s*kw/i);
+  return m ? parseInt(m[1], 10) : 22;
+}
+
 let allPOIs = [];       // datos crudos de la API
 let markerIndex = [];   // { poi, marker, powerBand, operator, province }
 
@@ -260,9 +305,10 @@ async function cargarCargadores() {
     // Descarta países que no son Argentina (dato mal cargado por la comunidad)
     if (a.Country?.ISOCode && a.Country.ISOCode !== 'AR') return;
 
-    const { name: province, distance } = nearestProvince(a.Latitude, a.Longitude);
+    const { name: byCoords, distance } = nearestProvince(a.Latitude, a.Longitude);
     // Si está a más de 250km de cualquier centroide provincial, es ruido (ej. Uruguay)
     if (distance > 250) return;
+    const province = provinceFromText(`${a.StateOrProvince || ''} ${a.Town || ''} ${a.AddressLine1 || ''}`) || byCoords;
 
     const maxKW = Math.max(0, ...(poi.Connections || []).map(c => c.PowerKW || 0));
     const operator = poi.OperatorInfo?.Title || 'Sin operador';
@@ -289,15 +335,20 @@ async function cargarCargadores() {
 
 function cargarScame(operators, provinces) {
   SCAME_POINTS.forEach(p => {
-    const { name: province, distance } = nearestProvince(p.lat, p.lng);
-    if (distance > 250) return;
+    const byText = provinceFromText(p.address) || provinceFromText(p.name);
+    const byCoords = nearestProvince(p.lat, p.lng);
+    if (!byText && byCoords.distance > 250) return;
+    const province = byText || byCoords.name;
+
+    const kw = powerFromText(p.address);
+    const connector = /continua|\bdc\b/i.test(p.address) ? 'DC rápido' : 'Tipo 2 (AC)';
 
     const marker = L.marker([p.lat, p.lng], { icon: scameIcon });
     marker.bindPopup(`
       <div class="poi-title">${p.name}</div>
       <div class="poi-row"><span>Dirección:</span> ${p.address || 'N/D'}</div>
       <div class="poi-row"><span>Operador:</span> Scame</div>
-      <div class="poi-row"><span>Conectores:</span><br>Tipo 2 · red pública gratuita</div>
+      <div class="poi-row"><span>Conectores:</span><br>${connector} · ${kw}kW · acceso público gratuito</div>
     `);
 
     operators.add('Scame');
@@ -306,8 +357,8 @@ function cargarScame(operators, provinces) {
     populateSelectOption('f-province', province);
 
     markerIndex.push({
-      marker, maxKW: 0,
-      powerBand: 'fast', // Scame no publica kW por punto; en general son AC 7-22kW
+      marker, maxKW: kw,
+      powerBand: powerBand(kw),
       operator: 'Scame', province,
       searchBlob: `${p.name} ${p.address} ${province}`.toLowerCase()
     });
